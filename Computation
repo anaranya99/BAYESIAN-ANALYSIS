@@ -1,0 +1,75 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the prior distribution
+def prior_distribution_theta1(theta1):
+    return 1
+
+def prior_distribution_theta2(theta2):
+    return 1
+
+# Define the likelihood function
+def likelihood_function(y, theta1, theta2):
+    return np.exp(-0.5 * (y[0] - theta1)**2 - 0.5 * (y[1] - theta2)**2)
+
+# Define the posterior distribution
+def posterior_distribution_theta1(y, theta1, theta2):
+    return likelihood_function(y, theta1, theta2) * prior_distribution_theta1(theta1)
+
+def posterior_distribution_theta2(y, theta1, theta2):
+    return likelihood_function(y, theta1, theta2) * prior_distribution_theta2(theta2)
+
+# Define the Gibbs sampler
+def gibbs_sampler(y, num_samples):
+    theta1_samples = np.zeros(num_samples)
+    theta2_samples = np.zeros(num_samples)
+
+    # Initialize the starting values
+    theta1 = np.random.uniform(-10, 10)
+    theta2 = np.random.uniform(-10, 10)
+
+    for i in range(num_samples):
+        # Sample theta1 from the conditional distribution
+        theta1_samples[i] = theta1
+        theta1_proposal = np.random.normal(theta1, 1)
+        alpha = posterior_distribution_theta1(y, theta1_proposal, theta2) / posterior_distribution_theta1(y, theta1, theta2)
+        if np.random.uniform() < alpha:
+            theta1 = theta1_proposal
+
+        # Sample theta2 from the conditional distribution
+        theta2_samples[i] = theta2
+        theta2_proposal = np.random.normal(theta2, 1)
+        alpha = posterior_distribution_theta2(y, theta1, theta2_proposal) / posterior_distribution_theta2(y, theta1, theta2)
+        if np.random.uniform() < alpha:
+            theta2 = theta2_proposal
+
+    return theta1_samples, theta2_samples
+
+# Set the parameters
+y = np.array([0, 0])
+num_samples = 10000
+
+# Run the Gibbs sampler
+theta1_samples, theta2_samples = gibbs_sampler(y, num_samples)
+
+# Compute the posterior means
+posterior_mean_theta1 = np.mean(theta1_samples)
+posterior_mean_theta2 = np.mean(theta2_samples)
+
+# Compute the posterior variances
+posterior_variance_theta1 = np.var(theta1_samples)
+posterior_variance_theta2 = np.var(theta2_samples)
+
+# Plot the posterior distributions
+plt.hist(theta1_samples, bins=50, label='theta1')
+plt.hist(theta2_samples, bins=50, label='theta2')
+plt.xlabel('theta')
+plt.ylabel('P(theta)')
+plt.title('Posterior distributions of theta1 and theta2')
+plt.legend()
+
+# Print the posterior means and variances
+print('Posterior mean of theta1:', posterior_mean_theta1)
+print('Posterior variance of theta1:', posterior_variance_theta1)
+print('Posterior mean of theta2:', posterior_mean_theta2)
+print('Posterior variance of theta2:', posterior_variance_theta2)
