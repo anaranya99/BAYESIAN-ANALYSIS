@@ -1,0 +1,30 @@
+n <- 16
+a <- 2
+b <- 4
+# Set the number of iterations
+M <- 1000
+# Initialize the vectors for storing the samples
+y_samples <- rep(NA, M)
+theta_samples <- rep(NA, M)
+# Initialize the starting values
+theta <- runif(1)
+y <- rbinom(1, size = n, prob = theta)
+# Perform Gibbs sampling iterations
+for (i in 2:M) {
+  # Sample Y from the conditional distribution P(Y | theta)
+  y <- rbinom(1, size = n, prob = theta)
+  
+  # Sample theta from the conditional distribution P(theta | Y)
+  theta <- rbeta(1, shape1 = a + y, shape2 = b + n - y)
+  
+  # Store the samples
+  y_samples[i] <- y
+  theta_samples[i] <- theta
+}
+
+# Calculate the marginal distribution of Y
+y_counts <- table(y_samples)
+y_probs <- y_counts / M
+
+# Print the marginal distribution of Y
+print(y_probs)
