@@ -1,0 +1,91 @@
+# Define the likelihood function
+likelihood_function <- function(y, theta1, theta2) {
+  dnorm(y, mean = c(theta1, theta2), sd = c(1, 1), log = TRUE)
+}
+
+# Define the prior distributions
+prior_distribution_theta1 <- function(theta1) {
+  if (theta1 > 0 && theta1 < 1) {
+    1
+  } else {
+    0
+  }
+}
+
+prior_distribution_theta2 <- function(theta2) {
+  if (theta2 > 0 && theta2 < 1) {
+    1
+  } else {
+    0
+  }
+}
+
+# Define the conditional distributions
+conditional_distribution_theta1 <- function(theta1, theta2, y) {
+  likelihood_function(y, theta1, theta2) * prior_distribution_theta1(theta1)
+}
+
+conditional_distribution_theta2 <- function(theta1, theta2, y) {
+  likelihood_function(y, theta1, theta2) * prior_distribution_theta2(theta2)
+}
+
+# Implement Gibbs sampling
+gibbs_sampler <- function(y, num_samples) {
+  theta1_samples <- rep(NA, num_samples)
+  theta2_samples <- rep(NA, num_samples)
+  
+  # Initialize the starting values
+  theta1 <- runif(1)
+  theta2 <- runif(1)
+  
+  for (i in 2:num_samples) {
+    # Sample theta1 from the conditional distribution
+    theta1_proposal <- rnorm(1, mean = theta1, sd = 1)
+    alpha <- conditional_distribution_theta1(theta1_proposal, theta2, y) / conditional_distribution_theta1(theta1, theta2, y)
+    
+    if (runif(1) < alpha) {
+      theta1 <- theta1_proposal
+    }
+    
+    # Sample theta2 from the conditional distribution
+    theta2_proposal <- rnorm(1, mean = theta2, sd = 1)
+    alpha <- conditional_distribution_theta2(theta1, theta2_proposal, y) / conditional_distribution_theta2(theta1, theta2, y)
+    
+    if (runif(1) < alpha) {
+      theta2 <- theta2_proposal
+    }
+    
+    # Store the samples
+    theta1_samples[i] <- theta1
+    theta2_samples[i] <- theta2
+  }
+  
+  return(theta1_samples, theta2_samples)
+}
+
+# Set the parameters
+y <- c(0, 0)
+num_samples <- 10000
+
+# Run the Gibbs sampler
+theta1_samples <- gibbs_sampler(y, num_samples)[1, ]
+theta2_samples <- gibbs_sampler(y, num_samples)[2, ]
+
+# Compute the posterior means
+posterior_mean_theta1 <- mean(theta1_samples)
+posterior_mean_theta2 <- mean(theta2_samples)
+
+# Compute the posterior variances
+posterior_variance_theta1 <- var(theta1_samples)
+posterior_variance_theta2 <- var(theta2_samples)
+
+# Plot the posterior distributions
+hist(theta1_samples, main = "Posterior Distribution of theta1", xlab = "theta1", ylab = "Density")
+hist(theta2_samples, main = "Posterior Distribution of theta2", xlab = "theta2", ylab = "Density")
+
+# Print the posterior means and variances
+print(paste("Posterior mean of theta1:", posterior_mean_theta1))
+print(paste("Posterior variance of theta1:", posterior_variance_theta1))
+print(paste("Posterior mean of theta2:", posterior_mean_theta2))
+print(paste("Posterior variance of theta2:", posterior_variance_theta2))
+
